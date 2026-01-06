@@ -48,6 +48,9 @@ const VotePage = () => {
             }
         } catch (err) {
             console.error('Error fetching user votes:', err);
+            if (err.code === '42703') {
+                alert("DATABASE ERROR: The 'user_id' column is missing in Supabase. Please run the SQL command provided in the chat.");
+            }
         } finally {
             setLoading(false);
         }
@@ -83,9 +86,11 @@ const VotePage = () => {
 
             if (error) {
                 console.error('Error saving vote:', error);
-                // In a real app, revert optimistic UI here if unique constraint failed
-                if (error.code === '23505') { // Unique violation
-                    alert('You already voted for this character!');
+                if (error.code === '42703') {
+                    alert("DATABASE ERROR: Missing 'user_id' column. Run the SQL migration!");
+                } else if (error.code === '23505') { // Unique violation
+                    // Silent fail or toast
+                    console.warn('Duplicate vote prevented');
                 }
             } else {
                 // Update local set
